@@ -140,7 +140,7 @@ typedef enum kmp_sched_t {
 typedef void kmp_Indent;
 typedef void (*kmp_ParFctPtr)(int32_t *global_tid, int32_t *bound_tid, ...);
 typedef void (*kmp_ReductFctPtr)(void *lhsData, void *rhsData);
-typedef void (*kmp_InterWarpCopyFctPtr)(void* src, int warp_num);
+typedef void (*kmp_InterWarpCopyFctPtr)(void* src, int32_t warp_num);
 typedef void (*kmp_ShuffleReductFctPtr)(void *rhsData, int16_t lane_id, int16_t lane_offset, int16_t shortCircuit);
 typedef void (*kmp_CopyToScratchpadFctPtr)(void *reduceData, void * scratchpad, int32_t index, int32_t width);
 typedef void (*kmp_LoadReduceFctPtr)(void *reduceData, void * scratchpad, int32_t index, int32_t width, int32_t reduce);
@@ -194,13 +194,13 @@ typedef int32_t kmp_CriticalName[8];
 ////////////////////////////////////////////////////////////////////////////////
 
 // query
-EXTERN int32_t __kmpc_global_thread_num(kmp_Indent *loc);  // missing
 EXTERN int32_t __kmpc_global_num_threads(kmp_Indent *loc); // missing
 EXTERN int32_t __kmpc_bound_thread_num(kmp_Indent *loc);   // missing
 EXTERN int32_t __kmpc_bound_num_threads(kmp_Indent *loc);  // missing
 EXTERN int32_t __kmpc_in_parallel(kmp_Indent *loc);        // missing
 
 // parallel
+EXTERN int32_t __kmpc_global_thread_num(kmp_Indent *loc);
 EXTERN void __kmpc_push_num_threads(kmp_Indent *loc, int32_t global_tid,
                                     int32_t num_threads);
 // simd
@@ -245,6 +245,54 @@ EXTERN void __kmpc_for_static_init_8u(kmp_Indent *loc, int32_t global_tid,
                                       uint64_t *plower, uint64_t *pupper,
                                       int64_t *pstride, int64_t incr,
                                       int64_t chunk);
+EXTERN
+void __kmpc_for_static_init_4_simple_spmd(kmp_Indent *loc, int32_t global_tid,
+                                          int32_t sched, int32_t *plastiter,
+                                          int32_t *plower, int32_t *pupper,
+                                          int32_t *pstride, int32_t incr,
+                                          int32_t chunk);
+EXTERN
+void __kmpc_for_static_init_4u_simple_spmd(kmp_Indent *loc, int32_t global_tid,
+                                           int32_t sched, int32_t *plastiter,
+                                           uint32_t *plower, uint32_t *pupper,
+                                           int32_t *pstride, int32_t incr,
+                                           int32_t chunk);
+EXTERN
+void __kmpc_for_static_init_8_simple_spmd(kmp_Indent *loc, int32_t global_tid,
+                                          int32_t sched, int32_t *plastiter,
+                                          int64_t *plower, int64_t *pupper,
+                                          int64_t *pstride, int64_t incr,
+                                          int64_t chunk);
+EXTERN
+void __kmpc_for_static_init_8u_simple_spmd(kmp_Indent *loc, int32_t global_tid,
+                                           int32_t sched, int32_t *plastiter1,
+                                           uint64_t *plower, uint64_t *pupper,
+                                           int64_t *pstride, int64_t incr,
+                                           int64_t chunk);
+EXTERN
+void __kmpc_for_static_init_4_simple_generic(kmp_Indent *loc,
+                                             int32_t global_tid, int32_t sched,
+                                             int32_t *plastiter,
+                                             int32_t *plower, int32_t *pupper,
+                                             int32_t *pstride, int32_t incr,
+                                             int32_t chunk);
+EXTERN
+void __kmpc_for_static_init_4u_simple_generic(
+    kmp_Indent *loc, int32_t global_tid, int32_t sched, int32_t *plastiter,
+    uint32_t *plower, uint32_t *pupper, int32_t *pstride, int32_t incr,
+    int32_t chunk);
+EXTERN
+void __kmpc_for_static_init_8_simple_generic(kmp_Indent *loc,
+                                             int32_t global_tid, int32_t sched,
+                                             int32_t *plastiter,
+                                             int64_t *plower, int64_t *pupper,
+                                             int64_t *pstride, int64_t incr,
+                                             int64_t chunk);
+EXTERN
+void __kmpc_for_static_init_8u_simple_generic(
+    kmp_Indent *loc, int32_t global_tid, int32_t sched, int32_t *plastiter1,
+    uint64_t *plower, uint64_t *pupper, int64_t *pstride, int64_t incr,
+    int64_t chunk);
 
 EXTERN void __kmpc_for_static_fini(kmp_Indent *loc, int32_t global_tid);
 
@@ -294,21 +342,35 @@ EXTERN int32_t __kmpc_nvptx_parallel_reduce_nowait(int32_t global_tid,
                              int32_t num_vars, size_t reduce_size,
                              void *reduce_data, kmp_ShuffleReductFctPtr shflFct,
                              kmp_InterWarpCopyFctPtr cpyFct);
+EXTERN int32_t __kmpc_nvptx_parallel_reduce_nowait_simple_spmd(
+    int32_t global_tid, int32_t num_vars, size_t reduce_size, void *reduce_data,
+    kmp_ShuffleReductFctPtr shflFct, kmp_InterWarpCopyFctPtr cpyFct);
+EXTERN int32_t __kmpc_nvptx_parallel_reduce_nowait_simple_generic(
+    int32_t global_tid, int32_t num_vars, size_t reduce_size, void *reduce_data,
+    kmp_ShuffleReductFctPtr shflFct, kmp_InterWarpCopyFctPtr cpyFct);
 EXTERN int32_t __kmpc_nvptx_simd_reduce_nowait(int32_t global_tid,
                              int32_t num_vars, size_t reduce_size,
                              void *reduce_data, kmp_ShuffleReductFctPtr shflFct,
                              kmp_InterWarpCopyFctPtr cpyFct);
-EXTERN int32_t __kmpc_nvptx_teams_reduce_nowait(int32_t global_tid,
-                             int32_t num_vars, size_t reduce_size,
-                             void *reduce_data,
-                             kmp_ShuffleReductFctPtr shflFct,
-                             kmp_InterWarpCopyFctPtr cpyFct,
-                             kmp_CopyToScratchpadFctPtr sratchFct,
-                             kmp_LoadReduceFctPtr ldFct);
+EXTERN int32_t __kmpc_nvptx_teams_reduce_nowait(
+    int32_t global_tid, int32_t num_vars, size_t reduce_size, void *reduce_data,
+    kmp_ShuffleReductFctPtr shflFct, kmp_InterWarpCopyFctPtr cpyFct,
+    kmp_CopyToScratchpadFctPtr sratchFct, kmp_LoadReduceFctPtr ldFct);
+EXTERN int32_t __kmpc_nvptx_teams_reduce_nowait_simple_spmd(
+    int32_t global_tid, int32_t num_vars, size_t reduce_size, void *reduce_data,
+    kmp_ShuffleReductFctPtr shflFct, kmp_InterWarpCopyFctPtr cpyFct,
+    kmp_CopyToScratchpadFctPtr sratchFct, kmp_LoadReduceFctPtr ldFct);
+EXTERN int32_t __kmpc_nvptx_teams_reduce_nowait_simple_generic(
+    int32_t global_tid, int32_t num_vars, size_t reduce_size, void *reduce_data,
+    kmp_ShuffleReductFctPtr shflFct, kmp_InterWarpCopyFctPtr cpyFct,
+    kmp_CopyToScratchpadFctPtr sratchFct, kmp_LoadReduceFctPtr ldFct);
 EXTERN int32_t __kmpc_shuffle_int32(int32_t val, int16_t delta, int16_t size);
 EXTERN int64_t __kmpc_shuffle_int64(int64_t val, int16_t delta, int16_t size);
 
 // sync barrier
+EXTERN void __kmpc_barrier(kmp_Indent *loc_ref, int32_t tid);
+EXTERN void __kmpc_barrier_simple_spmd(kmp_Indent *loc_ref, int32_t tid);
+EXTERN void __kmpc_barrier_simple_generic(kmp_Indent *loc_ref, int32_t tid);
 EXTERN int32_t __kmpc_cancel_barrier(kmp_Indent *loc, int32_t global_tid);
 
 // single
@@ -1188,14 +1250,14 @@ EXTERN void __array_atomic_float8_max(kmp_Indent *id_ref, int32_t tid,
                                       double *lhs, double *rhs, int64_t n);
 
 // non standard
-EXTERN void __kmpc_kernel_init(int ThreadLimit);
-EXTERN void __kmpc_kernel_deinit();
+EXTERN void __kmpc_kernel_init(int ThreadLimit, int16_t RequiresOMPRuntime);
+EXTERN void __kmpc_kernel_deinit(int16_t IsOMPRuntimeInitialized);
 EXTERN void __kmpc_spmd_kernel_init(int ThreadLimit,
-                                    short RequiresOMPRuntime,
-                                    short RequiresDataSharing);
+                                    int16_t RequiresOMPRuntime,
+                                    int16_t RequiresDataSharing);
 EXTERN void __kmpc_spmd_kernel_deinit();
-EXTERN void __kmpc_kernel_prepare_parallel(void *WorkFn);
-EXTERN bool __kmpc_kernel_parallel(void **WorkFn);
+EXTERN void __kmpc_kernel_prepare_parallel(void *WorkFn, int16_t IsOMPRuntimeInitialized);
+EXTERN bool __kmpc_kernel_parallel(void **WorkFn, int16_t IsOMPRuntimeInitialized);
 EXTERN void __kmpc_kernel_end_parallel();
 EXTERN bool __kmpc_kernel_convergent_parallel(void *buffer, bool *IsFinal, int32_t *LaneSource);
 EXTERN void __kmpc_kernel_end_convergent_parallel(void *buffer);
@@ -1218,7 +1280,8 @@ EXTERN void* __kmpc_data_sharing_environment_begin(
     void **SavedSharedFrame,
     int32_t *SavedActiveThreads,
     size_t SharingDataSize,
-    size_t SharingDefaultDataSize );
+    size_t SharingDefaultDataSize,
+    int16_t IsOMPRuntimeInitialized);
 EXTERN void __kmpc_data_sharing_environment_end(
     __kmpc_data_sharing_slot **SavedSharedSlot,
     void **SavedSharedStack,
@@ -1226,6 +1289,7 @@ EXTERN void __kmpc_data_sharing_environment_end(
     int32_t *SavedActiveThreads,
     int32_t IsEntryPoint );
 
-EXTERN void* __kmpc_get_data_sharing_environment_frame(int32_t SourceThreadID);
+EXTERN void* __kmpc_get_data_sharing_environment_frame(int32_t SourceThreadID,
+                                                       int16_t IsOMPRuntimeInitialized);
 //EXTERN void __kmpc_samuel_print(int64_t Bla);
 #endif

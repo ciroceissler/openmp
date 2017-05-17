@@ -209,9 +209,11 @@ EXTERN void __kmpc_kernel_end_convergent_parallel(void *buffer) {
 //    }
 //
 // This routine is always called by the team master..
-EXTERN void __kmpc_kernel_prepare_parallel(void *WorkFn) {
+EXTERN void __kmpc_kernel_prepare_parallel(void *WorkFn, int16_t IsOMPRuntimeInitialized) {
   PRINT0(LD_IO, "call to __kmpc_kernel_prepare_parallel\n");
   omptarget_nvptx_workFn = WorkFn;
+
+  if (!IsOMPRuntimeInitialized) return;
 
   // This routine is only called by the team master.  The team master is
   // the first thread of the last warp.  It always has the logical thread
@@ -286,15 +288,16 @@ EXTERN void __kmpc_kernel_prepare_parallel(void *WorkFn) {
 // returns True if this thread is active, else False.
 //
 // Only the worker threads call this routine.
-EXTERN bool __kmpc_kernel_parallel(void **WorkFn) {
+EXTERN bool __kmpc_kernel_parallel(void **WorkFn, int16_t IsOMPRuntimeInitialized) {
   PRINT0(LD_IO | LD_PAR, "call to __kmpc_kernel_parallel\n");
 
   // Work function and arguments for L1 parallel region.
   *WorkFn   = omptarget_nvptx_workFn;
 
+  if (!IsOMPRuntimeInitialized) return true;
+
   // If this is the termination signal from the master, quit early.
-  if (!*WorkFn)
-    return false;
+  if (!*WorkFn) return false;
 
   // Only the worker threads call this routine and the master warp
   // never arrives here.  Therefore, use the nvptx thread id.
@@ -400,6 +403,14 @@ EXTERN uint16_t __kmpc_parallel_level(kmp_Indent *loc,
     return 1;
   else
     return 0;
+}
+
+// This kmpc call returns the thread id across all teams. It's value is
+// cached by the compiler and used when calling the runtime. On nvptx
+// it's cheap to recalculate this value so we never use the result
+// of this call.
+EXTERN int32_t __kmpc_global_thread_num(kmp_Indent *loc) {
+  return GetLogicalThreadIdInBlock();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
